@@ -1,0 +1,142 @@
+var serviceLength;
+var arr;
+var service;
+
+function main()
+ {
+   service = parseJSONFiles();
+   serviceLength = service.length; //initialize the length of the json file and parse the json file
+   arr = constructArray(serviceLength, 2); // construct a 2d Array with a width of 2 and a length of the json file
+   fillArray(); //fill array with value
+   const final = clean(arr);
+   console.log(arrayToCSV(final)); //call arraytoCSV which logs a CSV from the 2d Array
+}
+
+function parseJSONFiles() {
+
+const fs = require('fs');
+
+    var jsonString = fs.readFileSync('./services.json');
+    const service = JSON.parse(jsonString); //parsejson file
+    console.log(service); //log service json file
+    return service;
+}
+
+function constructArray(rows,columns) {
+
+ array = new Array(rows); //initialize 2d array
+    for(var i = 0; i < array.length;i++)
+     {
+        array[i] = new Array(columns);
+    }   
+    console.log(array);
+    return array; //return the array
+}
+
+function  fillArray(){
+
+    for(var c = 0; c < serviceLength; c++)
+    {
+            arr[c][0] = getFinalTime(c);
+            arr[c][1] = getScore(c);       
+    }
+        }
+
+function getFinalTime(index)
+{
+    var date = new Date(service[index].date['$date'])
+    var milliseconds = date.getTime();
+    var otherDate = new Date(service[index].finishedTime);
+    otherDate = otherDate.getTime();
+    var finalTime = otherDate - milliseconds;
+    finalTime = (finalTime/1000)/60;
+    return finalTime;
+}
+
+function getScore(index) {
+  
+        if(service[index] &&  service[index].surveys  && service[index].surveys.answers && service[index].surveys.answers['Experience__c']) //not all services have scores filled out
+        {
+            return service[index].surveys.answers['Experience__c'];
+        }
+        else   
+        {
+            return null;
+        }
+    
+
+}
+function arrayToCSV (twoDiArray) {
+    const fs = require('fs');
+    var csvRows = [];
+    for (var i = 0; i < twoDiArray.length; ++i) {
+        for (var j = 0; j < twoDiArray[i].length; ++j) {
+            twoDiArray[i][j] = '\"' + twoDiArray[i][j] + '\"';  // Handle elements that contain commas
+        }
+        csvRows.push(twoDiArray[i].join(','));
+
+    }
+
+    var csvString = csvRows.join('\r\n');
+    fs.writeFileSync("output.csv", csvString);
+   
+}
+
+function clean(array)
+{
+    let final = constructArray(serviceLength);
+    
+    for(var r = 0; r < array.length;r++)
+    {
+            if(array[r][1] != null && array[r][0] < 300 && array[r][0] > 1) 
+            {
+                final.push(array[r]);
+            }
+    }
+
+    for(var i = 0; i < final.length;i++)
+    {
+        if(final[i] === undefined)
+        {
+            final.shift();
+            i--;
+        }
+    }
+    return final;
+    
+}
+
+main();
+//below are unused functions that will allow this code to pull and compare service id's between various json files
+/*
+        console.log(result[0]);
+        console.log(result[0].date);
+        console.log(result[0].finishedTime);
+        console.log(result[0].driver.id);
+*/
+/*
+function getSurveyId(index) 
+{
+    if(service[index].surveys.answers.Id != null)//check if there is a score
+    {
+        return service[index].surveys.answers.Id; //return id of the survey done
+    }
+    else 
+    {
+        return null;
+    }
+}
+function getServiceId(index)
+{  
+    if(service[index].driver.id != null)//check if there is an Id
+    {
+        return service[index].driver.id; //return id of the survey done
+    }
+    else 
+    {
+        return null;
+    }
+}
+*/
+
+
